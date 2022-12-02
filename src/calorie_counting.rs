@@ -5,7 +5,7 @@ use std::{
     io::{BufRead, BufReader},
 };
 
-pub fn result() {
+pub fn result_part_1() {
     let inv = read_inventory();
     let max_inv = count_calories(inv);
     print!("{}", max_inv);
@@ -18,6 +18,26 @@ fn count_calories(inventory: Vec<Vec<usize>>) -> usize {
     }
 
     max_inv
+}
+
+pub fn result_part_2() {
+    let inv = read_inventory();
+    let max_inv: Vec<usize> = count_top_x(3, inv);
+    print!("{:?}", max_inv.iter().sum::<usize>());
+}
+
+fn count_top_x(n: usize, inventory: Vec<Vec<usize>>) -> Vec<usize> {
+    let mut inv_vec = Vec::<usize>::new();
+    inv_vec.resize(n + 1, 0);
+
+    for inv in inventory {
+        inv_vec[0] = inv.iter().sum();
+        inv_vec.sort();
+    }
+
+    inv_vec.reverse();
+    inv_vec.resize(n, 0);
+    inv_vec
 }
 
 fn read_inventory() -> Vec<Vec<usize>> {
@@ -67,7 +87,21 @@ mod tests {
     }
 
     #[test]
-    fn get_result() {
-        result();
+    fn get_result_1() {
+        result_part_1();
+    }
+
+    #[test]
+    fn check_p2_eq_p1() {
+        let inventory = read_inventory();
+        assert_eq!(
+            count_calories(inventory.clone()),
+            count_top_x(1, inventory).iter().sum()
+        );
+    }
+
+    #[test]
+    fn get_result_2() {
+        result_part_2();
     }
 }

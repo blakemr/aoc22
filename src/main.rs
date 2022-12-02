@@ -1,5 +1,5 @@
 mod calorie_counting;
 fn main() {
-    // Day 1, question 1
-    calorie_counting::result();
+    calorie_counting::result_part_1();
+    calorie_counting::result_part_2();
 }
