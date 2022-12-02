@@ -20,6 +20,29 @@ fn count_calories(inventory: Vec<Vec<usize>>) -> usize {
     max_inv
 }
 
+fn read_inventory() -> Vec<Vec<usize>> {
+    let filepath = "src\\calorie_counting_input.txt";
+    let file = File::open(filepath).expect("Error opening file.");
+    let reader = BufReader::new(file);
+
+    let mut inv_vec = Vec::<Vec<usize>>::new();
+    let mut current_inv = Vec::<usize>::new();
+    for line in reader.lines() {
+        match line {
+            Ok(line) => match line.parse::<usize>() {
+                Ok(value) => current_inv.push(value),
+                Err(_) => {
+                    inv_vec.push(current_inv.clone());
+                    current_inv.clear();
+                }
+            },
+            Err(error) => panic!("{}", error),
+        }
+    }
+
+    inv_vec
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -47,27 +70,4 @@ mod tests {
     fn get_result() {
         result();
     }
-}
-
-fn read_inventory() -> Vec<Vec<usize>> {
-    let filepath = "src\\calorie_counting_input.txt";
-    let file = File::open(filepath).expect("Error opening file.");
-    let reader = BufReader::new(file);
-
-    let mut inv_vec = Vec::<Vec<usize>>::new();
-    let mut current_inv = Vec::<usize>::new();
-    for line in reader.lines() {
-        match line {
-            Ok(line) => match line.parse::<usize>() {
-                Ok(value) => current_inv.push(value),
-                Err(_) => {
-                    inv_vec.push(current_inv.clone());
-                    current_inv.clear();
-                }
-            },
-            Err(error) => panic!("{}", error),
-        }
-    }
-
-    inv_vec
 }
