@@ -1,3 +1,5 @@
+mod calorie_counting;
 fn main() {
-    println!("Hello, world!");
+    // Day 1, question 1
+    calorie_counting::result();
 }
