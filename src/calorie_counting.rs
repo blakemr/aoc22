@@ -79,6 +79,7 @@ mod tests {
         assert_eq!(count_calories(inv), 800);
     }
 
+    #[allow(clippy::print_with_newline)]
     #[test]
     fn read_bytes() {
         for line in read_inventory() {
