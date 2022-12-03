@@ -41,7 +41,7 @@ fn count_top_x(n: usize, inventory: Vec<Vec<usize>>) -> Vec<usize> {
 }
 
 fn read_inventory() -> Vec<Vec<usize>> {
-    let filepath = "src\\calorie_counting_input.txt";
+    let filepath = "src\\d1_calorie_counting_input.txt";
     let file = File::open(filepath).expect("Error opening file.");
     let reader = BufReader::new(file);
 

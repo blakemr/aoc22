@@ -56,7 +56,7 @@ fn round_2_score(round: String) -> u32 {
 }
 
 fn txt_input() -> Vec<String> {
-    let fp = "src\\rock_paper_scissors.txt";
+    let fp = "src\\d2_rock_paper_scissors.txt";
     let file = File::open(fp).expect("Error opening file.");
     let reader = BufReader::new(file);
 
@@ -70,7 +70,7 @@ fn txt_input() -> Vec<String> {
 
 #[cfg(test)]
 mod tests {
-    use crate::rock_paper_scissors::sum_round_2;
+    use crate::d2_rock_paper_scissors::sum_round_2;
 
     use super::{round_score, sum_score, txt_input};
 
