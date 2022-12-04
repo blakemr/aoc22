@@ -17,6 +17,8 @@ impl Assignment {
     fn overlaps(self, compare: Assignment) -> bool {
         (self.start <= compare.end && self.end >= compare.end)
             || (self.start <= compare.start && self.end >= compare.start)
+            || (compare.start <= self.end && compare.end >= self.end)
+            || (compare.start <= self.start && compare.end >= self.start)
     }
 }
 
@@ -33,7 +35,7 @@ pub fn count_overlaps() -> usize {
 
     assignments
         .iter()
-        .filter(|pair| pair[0].overlaps(pair[1]) || pair[1].overlaps(pair[0]))
+        .filter(|pair| pair[0].overlaps(pair[1]))
         .count()
 }
 
