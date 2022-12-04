@@ -67,10 +67,10 @@ fn get_common_char(s1: &str, s2: &str) -> char {
 }
 
 fn score_char(c: char) -> u32 {
-    if c.is_lowercase() {
-        u32::from(c) - 96
-    } else {
-        u32::from(c) - 64 + 26
+    let alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    match alphabet.find(c) {
+        Some(n) => n as u32 + 1,
+        None => 0,
     }
 }
 
@@ -107,7 +107,7 @@ mod tests {
 
     #[test]
     fn test_bad_score() {
-        assert_eq!(score_char(char::REPLACEMENT_CHARACTER), 65533 - 64 + 26);
+        assert_eq!(score_char(char::REPLACEMENT_CHARACTER), 0);
     }
 
     #[test]
