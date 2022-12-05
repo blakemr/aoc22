@@ -65,25 +65,29 @@ fn import_moves() -> Vec<MoveOrder> {
     let file = File::open(MOVES).expect("Error opening file.");
     let reader = BufReader::new(file);
 
-    let move_sep = " from ";
-    let position_sep = " to ";
-
     let mut orders = Vec::<MoveOrder>::new();
     for line in reader.lines() {
         let lin = line.expect("Error reading line.");
-        let mut move_and_position = lin.split(move_sep);
 
-        let Some(mov) = move_and_position.next() else {panic!("line split has no next element (1/2)!")};
-        let Some(move_number) = mov.strip_prefix("move ") else {panic!("Move pattern did not match!")};
-        let amount: usize = move_number.parse().expect("Error parsing move number.");
+        let split_line: Vec<&str> = lin.split(' ').collect();
 
-        let Some(pos) = move_and_position.next() else {panic!("line split has no next element (2/2)!")};
-        let mut start_and_end = pos
-            .split(position_sep)
-            .map(|n| n.parse::<usize>().expect("Unable to parse usize."));
+        #[allow(dead_code)]
+        enum LineSegments {
+            Move,
+            MoveAmount,
+            From,
+            StartStack,
+            To,
+            EndStack,
+        }
 
-        let Some(mut start) = start_and_end.next() else {panic!("start and end split has no next element (1/2)")};
-        let Some(mut end) = start_and_end.next() else {panic!("start and end split has no next element (2/2)")};
+        let amount: usize = split_line[LineSegments::MoveAmount as usize]
+            .parse()
+            .unwrap();
+        let mut start: usize = split_line[LineSegments::StartStack as usize]
+            .parse()
+            .unwrap();
+        let mut end: usize = split_line[LineSegments::EndStack as usize].parse().unwrap();
 
         start -= 1;
         end -= 1;
