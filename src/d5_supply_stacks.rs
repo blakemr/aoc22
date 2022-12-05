@@ -69,7 +69,7 @@ fn import_moves() -> Vec<MoveOrder> {
     for line in reader.lines() {
         let lin = line.expect("Error reading line.");
 
-        let split_line: Vec<&str> = lin.split(' ').collect();
+        let split_line: Vec<&str> = lin.split_whitespace().collect();
 
         #[allow(dead_code)]
         enum LineSegments {
