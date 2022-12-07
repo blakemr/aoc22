@@ -4,3 +4,4 @@ pub mod d3_rucksack_reorganization;
 pub mod d4_camp_cleanup;
 pub mod d5_supply_stacks;
 pub mod d6_tuning_trouble;
+pub mod d7_no_space_left;
