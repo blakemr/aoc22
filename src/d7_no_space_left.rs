@@ -1,7 +1,4 @@
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    mem::needs_drop,
-};
+use std::collections::BTreeSet;
 
 pub fn sum_small_files(data: &str, max_size: u32) -> u32 {
     // I need a stack. When the value gets popped off the stack, add it to the top of the stack. if that value is small, add it to my total
