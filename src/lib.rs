@@ -5,3 +5,4 @@ pub mod d4_camp_cleanup;
 pub mod d5_supply_stacks;
 pub mod d6_tuning_trouble;
 pub mod d7_no_space_left;
+pub mod d8_treetop_tree_house;
