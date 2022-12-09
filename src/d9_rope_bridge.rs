@@ -89,7 +89,7 @@ impl RopeSegment {
 
         while dx.abs() > 1 {
             self.tail.0 += dx.signum();
-            self.tail.1 += dy;
+            self.tail.1 += dy.signum();
 
             dx = self.head.0 - self.tail.0;
             dy = self.head.1 - self.tail.1;
@@ -97,7 +97,7 @@ impl RopeSegment {
         }
 
         while dy.abs() > 1 {
-            self.tail.0 += dx;
+            self.tail.0 += dx.signum();
             self.tail.1 += dy.signum();
 
             dx = self.head.0 - self.tail.0;
