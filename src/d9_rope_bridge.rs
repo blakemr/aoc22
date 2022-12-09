@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 #[derive(Debug, Clone, Copy)]
 enum Direction {
@@ -19,7 +19,7 @@ impl Rope {
         Rope { segments }
     }
 
-    fn get_tail_history(&self) -> HashSet<(i32, i32)> {
+    fn get_tail_history(&self) -> BTreeSet<(i32, i32)> {
         self.segments.last().unwrap().tail_history.clone()
     }
 
@@ -52,12 +52,12 @@ impl Rope {
 struct RopeSegment {
     head: (i32, i32),
     tail: (i32, i32),
-    tail_history: HashSet<(i32, i32)>,
+    tail_history: BTreeSet<(i32, i32)>,
 }
 
 impl RopeSegment {
     fn new() -> Self {
-        let mut tail_history = HashSet::new();
+        let mut tail_history = BTreeSet::new();
         tail_history.insert((0, 0));
 
         RopeSegment {
