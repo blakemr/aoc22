@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, collections::BTreeSet};
+use std::collections::BTreeSet;
 
 #[derive(Debug, Clone, Copy)]
 enum Direction {
@@ -23,20 +23,18 @@ impl Rope {
         self.segments.last().unwrap().tail_history.clone()
     }
 
-    fn move_head(&mut self, dir: Direction, len: i32) {
-        // This does not give the correct answer in all situations. For a precice answer, use move_head_slowly()
+    fn move_head(&mut self, direction: Direction) {
         let head = self.segments.first().unwrap();
-
-        let mut x = match dir {
+        let mut x = match direction {
             Direction::Up => head.head.0,
             Direction::Down => head.head.0,
-            Direction::Left => head.head.0 - len,
-            Direction::Right => head.head.0 + len,
+            Direction::Left => head.head.0 - 1,
+            Direction::Right => head.head.0 + 1,
         };
 
-        let mut y = match dir {
-            Direction::Up => head.head.1 + len,
-            Direction::Down => head.head.1 - len,
+        let mut y = match direction {
+            Direction::Up => head.head.1 + 1,
+            Direction::Down => head.head.1 - 1,
             Direction::Left => head.head.1,
             Direction::Right => head.head.1,
         };
@@ -46,31 +44,6 @@ impl Rope {
             x = segmnent.tail.0;
             y = segmnent.tail.1;
         });
-    }
-
-    fn move_head_slowly(&mut self, dir: Direction, len: i32) {
-        for i in 0..len {
-            let head = self.segments.first().unwrap();
-            let mut x = match dir {
-                Direction::Up => head.head.0,
-                Direction::Down => head.head.0,
-                Direction::Left => head.head.0 - 1,
-                Direction::Right => head.head.0 + 1,
-            };
-
-            let mut y = match dir {
-                Direction::Up => head.head.1 + 1,
-                Direction::Down => head.head.1 - 1,
-                Direction::Left => head.head.1,
-                Direction::Right => head.head.1,
-            };
-
-            self.segments.iter_mut().for_each(|segmnent| {
-                segmnent.put_head(x, y);
-                x = segmnent.tail.0;
-                y = segmnent.tail.1;
-            });
-        }
     }
 }
 
@@ -93,12 +66,12 @@ impl RopeSegment {
         }
     }
 
-    fn move_head(&mut self, dir: Direction, len: i32) {
-        match dir {
-            Direction::Down => self.head.1 -= len,
-            Direction::Up => self.head.1 += len,
-            Direction::Left => self.head.0 -= len,
-            Direction::Right => self.head.0 += len,
+    fn move_head(&mut self, direction: Direction) {
+        match direction {
+            Direction::Down => self.head.1 -= 1,
+            Direction::Up => self.head.1 += 1,
+            Direction::Left => self.head.0 -= 1,
+            Direction::Right => self.head.0 += 1,
         }
 
         self.move_tail();
@@ -138,7 +111,7 @@ pub fn part_1(input: &str) -> usize {
     let mut rope = RopeSegment::new();
 
     for command in commands {
-        rope.move_head(command.0, command.1);
+        rope.move_head(command);
     }
 
     rope.tail_history.len()
@@ -149,31 +122,31 @@ pub fn part_2(input: &str, length: usize) -> usize {
     let mut rope = Rope::new(length);
 
     for command in commands {
-        rope.move_head_slowly(command.0, command.1);
+        rope.move_head(command);
     }
 
     rope.get_tail_history().len()
 }
 
-fn parse(input: &str) -> Vec<(Direction, i32)> {
-    let mut commands = Vec::<(Direction, i32)>::new();
-    for line in input.lines() {
-        let mut split_line = line.split_whitespace();
+fn parse(input: &str) -> Vec<Direction> {
+    input
+        .lines()
+        .into_iter()
+        .flat_map(|line| {
+            let mut split_line = line.split_whitespace();
+            let direction = match split_line.next() {
+                Some("U") => Direction::Up,
+                Some("D") => Direction::Down,
+                Some("L") => Direction::Left,
+                Some("R") => Direction::Right,
+                _ => panic!("Unknown command!"),
+            };
 
-        let direction = match split_line.next() {
-            Some("U") => Direction::Up,
-            Some("D") => Direction::Down,
-            Some("L") => Direction::Left,
-            Some("R") => Direction::Right,
-            _ => panic!("Unknown command!"),
-        };
+            let amount: usize = split_line.next().unwrap().parse().unwrap();
 
-        let amount: i32 = split_line.next().unwrap().parse().unwrap();
-
-        commands.push((direction, amount));
-    }
-
-    commands
+            std::iter::repeat(direction).take(amount)
+        })
+        .collect()
 }
 
 #[cfg(test)]
