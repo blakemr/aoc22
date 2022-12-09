@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, f32::consts::E};
 
 #[derive(Debug)]
 enum Direction {
@@ -9,17 +9,58 @@ enum Direction {
 }
 
 struct Rope {
+    segments: Vec<RopeSegment>,
+}
+
+impl Rope {
+    fn new(length: usize) -> Self {
+        let mut segments = Vec::new();
+        segments.resize(length, RopeSegment::new());
+        Rope { segments }
+    }
+
+    fn get_tail_history(self) -> HashSet<(i32, i32)> {
+        self.segments.last().unwrap().tail_history.clone()
+    }
+
+    fn move_head(&mut self, dir: Direction, len: i32) {
+        let head = self.segments.first().unwrap();
+
+        let mut x = match dir {
+            Direction::Up => head.head.0,
+            Direction::Down => head.head.0,
+            Direction::Left => head.head.0 - len,
+            Direction::Right => head.head.0 + len,
+        };
+
+        let mut y = match dir {
+            Direction::Up => head.head.0 + len,
+            Direction::Down => head.head.0 - len,
+            Direction::Left => head.head.0,
+            Direction::Right => head.head.0,
+        };
+
+        self.segments.iter_mut().for_each(|segmnent| {
+            segmnent.put_head(x, y);
+            x = segmnent.tail.0;
+            y = segmnent.tail.0;
+        });
+    }
+}
+
+#[derive(Clone)]
+struct RopeSegment {
     head: (i32, i32),
     tail: (i32, i32),
     tail_history: HashSet<(i32, i32)>,
 }
 
-impl Rope {
+impl RopeSegment {
     fn new() -> Self {
         let mut tail_history = HashSet::new();
         tail_history.insert((0, 0));
 
-        Rope {
+        RopeSegment {
             head: (0, 0),
             tail: (0, 0),
             tail_history,
@@ -34,6 +75,11 @@ impl Rope {
             Direction::Right => self.head.0 += len,
         }
 
+        self.move_tail();
+    }
+
+    fn put_head(&mut self, x: i32, y: i32) {
+        self.head = (x, y);
         self.move_tail();
     }
 
@@ -63,7 +109,7 @@ impl Rope {
 
 pub fn part_1(input: &str) -> usize {
     let commands = parse(input);
-    let mut rope = Rope::new();
+    let mut rope = RopeSegment::new();
 
     for command in commands {
         rope.move_head(command.0, command.1);
@@ -72,8 +118,15 @@ pub fn part_1(input: &str) -> usize {
     rope.tail_history.len()
 }
 
-pub fn part_2(input: &str) -> u32 {
-    todo!()
+pub fn part_2(input: &str) -> usize {
+    let commands = parse(input);
+    let mut rope = Rope::new(10);
+
+    for command in commands {
+        rope.move_head(command.0, command.1);
+    }
+
+    rope.get_tail_history().len()
 }
 
 fn parse(input: &str) -> Vec<(Direction, i32)> {
@@ -103,6 +156,7 @@ mod tests {
     use std::fs;
 
     const TEST_INPUT: &str = "src\\d9_rope_bridge.test";
+    const TEST_INPUT_2: &str = "src\\d9_rope_bridge.test2";
     const INPUT: &str = "src\\d9_rope_bridge.txt";
 
     #[test]
@@ -129,8 +183,10 @@ mod tests {
     #[test]
     fn test_part_2() {
         let input = fs::read_to_string(TEST_INPUT).unwrap();
+        assert_eq!(part_2(&input), 1);
 
-        assert_eq!(part_2(&input), 0)
+        let input = fs::read_to_string(TEST_INPUT_2).unwrap();
+        assert_eq!(part_2(&input), 36);
     }
 
     #[test]
