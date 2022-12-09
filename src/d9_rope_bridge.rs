@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 enum Direction {
     Up,
     Down,
@@ -19,7 +19,7 @@ impl Rope {
         Rope { segments }
     }
 
-    fn get_tail_history(self) -> HashSet<(i32, i32)> {
+    fn get_tail_history(&self) -> HashSet<(i32, i32)> {
         self.segments.last().unwrap().tail_history.clone()
     }
 
@@ -34,21 +34,21 @@ impl Rope {
         };
 
         let mut y = match dir {
-            Direction::Up => head.head.0 + len,
-            Direction::Down => head.head.0 - len,
-            Direction::Left => head.head.0,
-            Direction::Right => head.head.0,
+            Direction::Up => head.head.1 + len,
+            Direction::Down => head.head.1 - len,
+            Direction::Left => head.head.1,
+            Direction::Right => head.head.1,
         };
 
         self.segments.iter_mut().for_each(|segmnent| {
             segmnent.put_head(x, y);
             x = segmnent.tail.0;
-            y = segmnent.tail.0;
+            y = segmnent.tail.1;
         });
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 struct RopeSegment {
     head: (i32, i32),
     tail: (i32, i32),
@@ -118,9 +118,9 @@ pub fn part_1(input: &str) -> usize {
     rope.tail_history.len()
 }
 
-pub fn part_2(input: &str) -> usize {
+pub fn part_2(input: &str, length: usize) -> usize {
     let commands = parse(input);
-    let mut rope = Rope::new(10);
+    let mut rope = Rope::new(length);
 
     for command in commands {
         rope.move_head(command.0, command.1);
@@ -181,18 +181,28 @@ mod tests {
     }
 
     #[test]
+    fn test_rope() {
+        let input = fs::read_to_string(TEST_INPUT).unwrap();
+
+        assert_eq!(part_2(&input, 1), 13)
+    }
+
+    #[test]
     fn test_part_2() {
         let input = fs::read_to_string(TEST_INPUT).unwrap();
-        assert_eq!(part_2(&input), 1);
+        assert_eq!(part_2(&input, 9), 1);
+    }
 
+    #[test]
+    fn test_part_2_large_input() {
         let input = fs::read_to_string(TEST_INPUT_2).unwrap();
-        assert_eq!(part_2(&input), 36);
+        assert_eq!(part_2(&input, 9), 36);
     }
 
     #[test]
     fn run_part_2() {
         let input = fs::read_to_string(INPUT).unwrap();
 
-        println!("{:?}", part_2(&input))
+        println!("{:?}", part_2(&input, 9))
     }
 }
