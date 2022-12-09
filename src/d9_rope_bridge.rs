@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::{borrow::Borrow, collections::BTreeSet};
 
 #[derive(Debug, Clone, Copy)]
 enum Direction {
@@ -24,6 +24,7 @@ impl Rope {
     }
 
     fn move_head(&mut self, dir: Direction, len: i32) {
+        // This does not give the correct answer in all situations. For a precice answer, use move_head_slowly()
         let head = self.segments.first().unwrap();
 
         let mut x = match dir {
@@ -45,6 +46,31 @@ impl Rope {
             x = segmnent.tail.0;
             y = segmnent.tail.1;
         });
+    }
+
+    fn move_head_slowly(&mut self, dir: Direction, len: i32) {
+        for i in 0..len {
+            let head = self.segments.first().unwrap();
+            let mut x = match dir {
+                Direction::Up => head.head.0,
+                Direction::Down => head.head.0,
+                Direction::Left => head.head.0 - 1,
+                Direction::Right => head.head.0 + 1,
+            };
+
+            let mut y = match dir {
+                Direction::Up => head.head.1 + 1,
+                Direction::Down => head.head.1 - 1,
+                Direction::Left => head.head.1,
+                Direction::Right => head.head.1,
+            };
+
+            self.segments.iter_mut().for_each(|segmnent| {
+                segmnent.put_head(x, y);
+                x = segmnent.tail.0;
+                y = segmnent.tail.1;
+            });
+        }
     }
 }
 
@@ -123,7 +149,7 @@ pub fn part_2(input: &str, length: usize) -> usize {
     let mut rope = Rope::new(length);
 
     for command in commands {
-        rope.move_head(command.0, command.1);
+        rope.move_head_slowly(command.0, command.1);
     }
 
     rope.get_tail_history().len()
@@ -163,7 +189,7 @@ mod tests {
     fn check_parse() {
         let input = fs::read_to_string(TEST_INPUT).unwrap();
 
-        dbg!(parse(&input));
+        println!("{:?}", parse(&input));
     }
 
     #[test]
@@ -182,9 +208,9 @@ mod tests {
 
     #[test]
     fn test_rope() {
-        let input = fs::read_to_string(TEST_INPUT).unwrap();
+        let input = fs::read_to_string(INPUT).unwrap();
 
-        assert_eq!(part_2(&input, 1), 13)
+        assert_eq!(part_2(&input, 1), 5874)
     }
 
     #[test]
