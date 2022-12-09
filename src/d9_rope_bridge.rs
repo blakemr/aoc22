@@ -68,8 +68,8 @@ impl RopeSegment {
 
     fn move_head(&mut self, direction: Direction) {
         match direction {
-            Direction::Down => self.head.1 -= 1,
             Direction::Up => self.head.1 += 1,
+            Direction::Down => self.head.1 -= 1,
             Direction::Left => self.head.0 -= 1,
             Direction::Right => self.head.0 += 1,
         }
