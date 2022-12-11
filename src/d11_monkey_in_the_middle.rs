@@ -30,7 +30,7 @@ impl Monkey {
         }
     }
 
-    fn inspect(&mut self) {
+    fn inspect(&mut self, relief: u64) {
         if let Some(item) = self.items.front_mut() {
             match self.op {
                 InspectOp::Add(x) => *item += x,
@@ -38,6 +38,7 @@ impl Monkey {
                 InspectOp::Squ => *item = item.pow(2),
             }
 
+            *item %= relief;
             self.inpections += 1;
         }
     }
@@ -135,14 +136,14 @@ impl FromStr for Monkey {
     }
 }
 
-pub fn part_1(input: &str, rounds: usize) -> u64 {
+pub fn part_1(input: &str, rounds: usize, relief: u64) -> u64 {
     let mut monkeys = parse(input);
 
     for _ in 0..rounds {
         // Round
         for i in 0..monkeys.len() {
             while !monkeys[i].items.is_empty() {
-                monkeys[i].inspect();
+                monkeys[i].inspect(relief);
                 monkeys[i].relief(3);
                 let toss = monkeys[i].throw().unwrap();
                 monkeys[toss.0 as usize].items.push_back(toss.1);
@@ -163,8 +164,7 @@ pub fn part_2(input: &str, rounds: usize, relief: u64) -> u64 {
         // Round
         for i in 0..monkeys.len() {
             while !monkeys[i].items.is_empty() {
-                monkeys[i].inspect();
-                monkeys[i].relief(relief);
+                monkeys[i].inspect(relief);
                 let toss = monkeys[i].throw().unwrap();
                 monkeys[toss.0 as usize].items.push_back(toss.1);
             }
@@ -172,14 +172,13 @@ pub fn part_2(input: &str, rounds: usize, relief: u64) -> u64 {
     }
 
     let mut inspections: Vec<u64> = monkeys.iter().map(|i| i.inpections).collect();
-    dbg!(&inspections);
 
     inspections.sort();
     inspections[inspections.len() - 1] * inspections[inspections.len() - 2]
 }
 
 pub fn parse(input: &str) -> Vec<Monkey> {
-    let mut monkeys = input.split("\n\r\n");
+    let monkeys = input.split("\n\r\n");
 
     monkeys
         .into_iter()
@@ -209,21 +208,21 @@ mod tests {
     fn test_part_1() {
         let input = fs::read_to_string(TEST_INPUT).unwrap();
 
-        assert_eq!(part_1(&input, 20), 10605)
+        assert_eq!(part_1(&input, 20, TEST_MAGIC_BS), 10605)
     }
 
     #[test]
     fn run_part_1() {
         let input = fs::read_to_string(INPUT).unwrap();
 
-        println!("{:?}", part_1(&input, 20))
+        println!("{:?}", part_1(&input, 20, MAGIC_BS))
     }
 
     #[test]
     fn test_part_2() {
         let input = fs::read_to_string(TEST_INPUT).unwrap();
 
-        assert_eq!(part_2(&input, 20, TEST_MAGIC_BS), 2713310158)
+        assert_eq!(part_2(&input, 10_000, TEST_MAGIC_BS), 2713310158)
     }
 
     #[test]
