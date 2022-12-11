@@ -1,4 +1,5 @@
 pub mod d10_cathode_ray_device;
+pub mod d11_monkey_in_the_middle;
 pub mod d1_calorie_counting;
 pub mod d2_rock_paper_scissors;
 pub mod d3_rucksack_reorganization;
