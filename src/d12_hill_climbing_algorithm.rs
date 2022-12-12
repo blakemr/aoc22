@@ -30,18 +30,18 @@ pub fn part_1(input: &str) -> usize {
     unvisited.push((nodes[start.1][start.0].distance_to_start, start));
     visited.insert(start);
 
-    let mut closest = start.0.abs_diff(end.0) + start.1.abs_diff(end.1);
+    // let mut closest = start.0.abs_diff(end.0) + start.1.abs_diff(end.1);
 
     while let Some((_, current)) = unvisited.pop() {
-        if current.0.abs_diff(end.0) + current.1.abs_diff(end.1) < closest {
-            closest = current.0.abs_diff(end.0) + current.1.abs_diff(end.1);
-            dbg!(closest, current);
-        }
+        // if current.0.abs_diff(end.0) + current.1.abs_diff(end.1) < closest {
+        //     closest = current.0.abs_diff(end.0) + current.1.abs_diff(end.1);
+        //     dbg!(closest, current);
+        // }
 
-        if current == end {
-            dbg!("!");
-            break;
-        }
+        // if current == end {
+        //     dbg!("!");
+        //     break;
+        // }
 
         for conn in 0..nodes[current.1][current.0].connections.len() {
             let conn_weight = nodes[current.1][current.0].connections[conn].weight;
@@ -49,37 +49,26 @@ pub fn part_1(input: &str) -> usize {
             let old_distance = nodes[conn_index.1][conn_index.0].distance_to_start;
 
             // Find distance
-            match conn_weight.abs().signum() {
-                0 | -1 => {
-                    nodes[conn_index.1][conn_index.0].distance_to_start = nodes[conn_index.1]
-                        [conn_index.0]
-                        .distance_to_start
-                        .min(nodes[current.1][current.0].distance_to_start + 1)
-                }
-                1 => {
-                    if conn_weight.abs() == 1 {
-                        nodes[conn_index.1][conn_index.0].distance_to_start = nodes[conn_index.1]
-                            [conn_index.0]
-                            .distance_to_start
-                            .min(nodes[current.1][current.0].distance_to_start + 1)
-                    }
-                }
-                _ => {}
-            }
+            if conn_weight <= 1 {
+                nodes[conn_index.1][conn_index.0].distance_to_start = nodes[conn_index.1]
+                    [conn_index.0]
+                    .distance_to_start
+                    .min(nodes[current.1][current.0].distance_to_start + 1);
 
-            if !visited.contains(&conn_index)
-                && nodes[conn_index.1][conn_index.0].distance_to_start < usize::MAX
-            {
-                visited.insert(conn_index);
-                unvisited.push((
-                    nodes[conn_index.1][conn_index.0].distance_to_start,
-                    conn_index,
-                ));
-            } else if nodes[conn_index.1][conn_index.0].distance_to_start < old_distance {
-                unvisited.push((
-                    nodes[conn_index.1][conn_index.0].distance_to_start,
-                    conn_index,
-                ));
+                if !visited.contains(&conn_index)
+                    && nodes[conn_index.1][conn_index.0].distance_to_start < usize::MAX
+                {
+                    visited.insert(conn_index);
+                    unvisited.push((
+                        nodes[conn_index.1][conn_index.0].distance_to_start,
+                        conn_index,
+                    ));
+                } else if nodes[conn_index.1][conn_index.0].distance_to_start < old_distance {
+                    unvisited.push((
+                        nodes[conn_index.1][conn_index.0].distance_to_start,
+                        conn_index,
+                    ));
+                }
             }
         }
     }
