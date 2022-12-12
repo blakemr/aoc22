@@ -6,13 +6,13 @@ use std::{
 type Point = (usize, usize);
 type NodeGraph2D = Vec<Vec<Node>>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Connection {
     node_index: Point,
     weight: i32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Node {
     connections: Vec<Connection>,
     height: i32,
@@ -30,19 +30,7 @@ pub fn part_1(input: &str) -> usize {
     unvisited.push((nodes[start.1][start.0].distance_to_start, start));
     visited.insert(start);
 
-    // let mut closest = start.0.abs_diff(end.0) + start.1.abs_diff(end.1);
-
     while let Some((_, current)) = unvisited.pop() {
-        // if current.0.abs_diff(end.0) + current.1.abs_diff(end.1) < closest {
-        //     closest = current.0.abs_diff(end.0) + current.1.abs_diff(end.1);
-        //     dbg!(closest, current);
-        // }
-
-        // if current == end {
-        //     dbg!("!");
-        //     break;
-        // }
-
         for conn in 0..nodes[current.1][current.0].connections.len() {
             let conn_weight = nodes[current.1][current.0].connections[conn].weight;
             let conn_index = nodes[current.1][current.0].connections[conn].node_index;
@@ -76,8 +64,63 @@ pub fn part_1(input: &str) -> usize {
     nodes[end.1][end.0].distance_to_start
 }
 
-pub fn part_2(input: &str) -> i32 {
-    todo!()
+pub fn part_2(input: &str) -> usize {
+    let (true_nodes, _start, end) = parse(input);
+    let mut lazy_a_check = Vec::<usize>::new();
+
+    for j in 0..true_nodes.len() {
+        for i in 0..true_nodes.first().unwrap().len() {
+            if true_nodes[j][i].height == 0 {
+                let mut nodes = true_nodes.clone();
+                let start = (i, j);
+
+                nodes[start.1][start.0].distance_to_start = 0;
+
+                // Dijkstra
+                let mut visited = HashSet::new();
+                let mut unvisited = BinaryHeap::new();
+                unvisited.push((nodes[start.1][start.0].distance_to_start, start));
+                visited.insert(start);
+
+                while let Some((_, current)) = unvisited.pop() {
+                    for conn in 0..nodes[current.1][current.0].connections.len() {
+                        let conn_weight = nodes[current.1][current.0].connections[conn].weight;
+                        let conn_index = nodes[current.1][current.0].connections[conn].node_index;
+                        let old_distance = nodes[conn_index.1][conn_index.0].distance_to_start;
+
+                        // Find distance
+                        if conn_weight <= 1 {
+                            nodes[conn_index.1][conn_index.0].distance_to_start = nodes
+                                [conn_index.1][conn_index.0]
+                                .distance_to_start
+                                .min(nodes[current.1][current.0].distance_to_start + 1);
+
+                            if !visited.contains(&conn_index)
+                                && nodes[conn_index.1][conn_index.0].distance_to_start < usize::MAX
+                            {
+                                visited.insert(conn_index);
+                                unvisited.push((
+                                    nodes[conn_index.1][conn_index.0].distance_to_start,
+                                    conn_index,
+                                ));
+                            } else if nodes[conn_index.1][conn_index.0].distance_to_start
+                                < old_distance
+                            {
+                                unvisited.push((
+                                    nodes[conn_index.1][conn_index.0].distance_to_start,
+                                    conn_index,
+                                ));
+                            }
+                        }
+                    }
+                }
+
+                lazy_a_check.push(nodes[end.1][end.0].distance_to_start);
+            }
+        }
+    }
+
+    *lazy_a_check.iter().min().unwrap()
 }
 
 pub fn parse(input: &str) -> (NodeGraph2D, Point, Point) {
@@ -191,7 +234,7 @@ mod tests {
     fn test_part_2() {
         let input = fs::read_to_string(TEST_INPUT).unwrap();
 
-        assert_eq!(part_2(&input), 0)
+        assert_eq!(part_2(&input), 29)
     }
 
     #[test]
