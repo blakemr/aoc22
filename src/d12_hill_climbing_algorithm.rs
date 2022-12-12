@@ -27,10 +27,16 @@ pub fn part_1(input: &str) -> usize {
     // Dijkstra
     let mut visited = HashSet::new();
     let mut unvisited = BinaryHeap::new();
-    unvisited.push((nodes[start.1][start.0].distance_to_start, start));
+    unvisited.push((
+        usize::MAX - nodes[start.1][start.0].distance_to_start,
+        start,
+    ));
     visited.insert(start);
 
     while let Some((_, current)) = unvisited.pop() {
+        if current == end {
+            break;
+        }
         for conn in 0..nodes[current.1][current.0].connections.len() {
             let conn_weight = nodes[current.1][current.0].connections[conn].weight;
             let conn_index = nodes[current.1][current.0].connections[conn].node_index;
@@ -48,12 +54,12 @@ pub fn part_1(input: &str) -> usize {
                 {
                     visited.insert(conn_index);
                     unvisited.push((
-                        nodes[conn_index.1][conn_index.0].distance_to_start,
+                        usize::MAX - nodes[conn_index.1][conn_index.0].distance_to_start,
                         conn_index,
                     ));
                 } else if nodes[conn_index.1][conn_index.0].distance_to_start < old_distance {
                     unvisited.push((
-                        nodes[conn_index.1][conn_index.0].distance_to_start,
+                        usize::MAX - nodes[conn_index.1][conn_index.0].distance_to_start,
                         conn_index,
                     ));
                 }
