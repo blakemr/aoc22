@@ -1,7 +1,4 @@
-use std::{
-    borrow::Borrow,
-    collections::{BinaryHeap, HashSet},
-};
+use std::collections::{BinaryHeap, HashSet};
 
 type Point = (usize, usize);
 type NodeGraph2D = Vec<Vec<Node>>;
@@ -225,7 +222,6 @@ mod tests {
     #[test]
     fn test_part_1() {
         let input = fs::read_to_string(TEST_INPUT).unwrap();
-
         assert_eq!(part_1(&input), 31)
     }
 
@@ -233,7 +229,7 @@ mod tests {
     fn run_part_1() {
         let input = fs::read_to_string(INPUT).unwrap();
 
-        println!("{:?}", part_1(&input))
+        assert_eq!(part_1(&input), 425)
     }
 
     #[test]
@@ -247,6 +243,6 @@ mod tests {
     fn run_part_2() {
         let input = fs::read_to_string(INPUT).unwrap();
 
-        println!("{:?}", part_2(&input))
+        assert_eq!(part_2(&input), 418)
     }
 }
