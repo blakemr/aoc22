@@ -3,7 +3,7 @@ use std::{str::FromStr, string::ParseError};
 #[derive(Debug)]
 struct ParseSignalError;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 enum SignalPacket {
     List(Vec<SignalPacket>),
     Int(u32),
@@ -79,6 +79,12 @@ impl PartialOrd for SignalPacket {
     }
 }
 
+impl Ord for SignalPacket {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.partial_cmp(other).unwrap()
+    }
+}
+
 #[derive(Debug)]
 pub struct Signal {
     left: SignalPacket,
@@ -113,17 +119,34 @@ pub fn part_1(input: &str) -> usize {
     ind
 }
 
-pub fn part_2(input: &str) -> u32 {
-    todo!()
+pub fn part_2(input: &str) -> usize {
+    let mut signals: Vec<SignalPacket> = input
+        .split("\n\r\n")
+        .flat_map(|pair| pair.lines())
+        .map(|line| line.parse().unwrap())
+        .collect();
+
+    signals.push("[[2]]".parse().unwrap());
+    signals.push("[[6]]".parse().unwrap());
+
+    signals.sort();
+
+    (signals
+        .iter()
+        .position(|x| x == &"[[2]]".parse::<SignalPacket>().unwrap())
+        .unwrap()
+        + 1)
+        * (signals
+            .iter()
+            .position(|x| x == &"[[6]]".parse::<SignalPacket>().unwrap())
+            .unwrap()
+            + 1)
 }
 
 pub fn parse(input: &str) -> Vec<Signal> {
     let signals = input.split("\n\r\n");
 
-    signals
-        .into_iter()
-        .map(|pair| pair.parse().unwrap())
-        .collect()
+    signals.map(|pair| pair.parse().unwrap()).collect()
 }
 
 #[cfg(test)]
@@ -159,7 +182,7 @@ mod tests {
     fn test_part_2() {
         let input = fs::read_to_string(TEST_INPUT).unwrap();
 
-        assert_eq!(part_2(&input), 0)
+        assert_eq!(part_2(&input), 140)
     }
 
     #[test]
