@@ -1,36 +1,66 @@
 use std::{str::FromStr, string::ParseError};
 
 #[derive(Debug)]
+struct ParseSignalError;
+
+#[derive(Debug, Clone)]
 enum SignalPacket {
     List(Vec<SignalPacket>),
     Int(u32),
 }
 
 impl FromStr for SignalPacket {
-    type Err = ParseError;
+    type Err = ParseSignalError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        // split into [] sets, then recurse
-        match s.chars().into_iter().next() {
-            Some('[') => {
-                if let (list, other) = s.rsplit_once(']') {
-                    todo!()
+        let mut packet_stack = Vec::new();
+        let ch_iter = s.chars();
+        let mut pay = String::new();
+
+        for ch in ch_iter {
+            match ch {
+                '[' => packet_stack.push(SignalPacket::List(Vec::new())),
+                ']' => {
+                    if !pay.is_empty() {
+                        let parent = packet_stack.pop().unwrap();
+                        if let SignalPacket::List(mut par) = parent {
+                            par.push(SignalPacket::Int(pay.parse().unwrap()));
+                            packet_stack.push(SignalPacket::List(par));
+                            pay.clear();
+                        } else {
+                            panic!("Non-List Signal in stack after ','!");
+                        }
+                    }
+
+                    let elem = packet_stack.pop().unwrap();
+                    if let Some(parent) = packet_stack.pop() {
+                        if let SignalPacket::List(mut par) = parent {
+                            par.push(elem);
+                            packet_stack.push(SignalPacket::List(par));
+                        } else {
+                            panic!("Non-List Signal in stack after ']'!");
+                        }
+                    } else {
+                        return Ok(elem);
+                    }
                 }
+                ',' => {
+                    if !pay.is_empty() {
+                        let parent = packet_stack.pop().unwrap();
+                        if let SignalPacket::List(mut par) = parent {
+                            par.push(SignalPacket::Int(pay.parse().unwrap()));
+                            packet_stack.push(SignalPacket::List(par));
+                            pay.clear();
+                        } else {
+                            panic!("Non-List Signal in stack after ','!");
+                        }
+                    }
+                }
+                _ => pay.push(ch),
             }
-            Some(_) => {
-                let ns = s.split(',');
-
-                let packets = ns
-                    .map(|p| match u32::try_into(p) {
-                        Some(n) => SignalPacket::Int(n),
-                        None => p::<SignalPacket>.parse(),
-                    })
-                    .collect();
-
-                Ok(SignalPacket::List(todo!()))
-            }
-            None => panic!("No chars!"),
         }
+
+        panic!("Unclosed bracket detected!");
     }
 }
 
