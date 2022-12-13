@@ -3,7 +3,7 @@ use std::{str::FromStr, string::ParseError};
 #[derive(Debug)]
 struct ParseSignalError;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 enum SignalPacket {
     List(Vec<SignalPacket>),
     Int(u32),
@@ -64,6 +64,21 @@ impl FromStr for SignalPacket {
     }
 }
 
+impl PartialOrd for SignalPacket {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        match (self, other) {
+            (SignalPacket::Int(x), SignalPacket::Int(y)) => x.partial_cmp(y),
+            (SignalPacket::List(x), SignalPacket::List(y)) => x.partial_cmp(y),
+            (SignalPacket::List(x), SignalPacket::Int(y)) => SignalPacket::List(x.clone())
+                .partial_cmp(&SignalPacket::List(vec![SignalPacket::Int(*y)])),
+            (SignalPacket::Int(x), SignalPacket::List(y)) => {
+                SignalPacket::List(vec![SignalPacket::Int(*x)])
+                    .partial_cmp(&SignalPacket::List(y.clone()))
+            }
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct Signal {
     left: SignalPacket,
@@ -85,10 +100,17 @@ impl FromStr for Signal {
     }
 }
 
-pub fn part_1(input: &str) -> u32 {
+pub fn part_1(input: &str) -> usize {
     let signals = parse(input);
 
-    todo!()
+    let mut ind = 0;
+    for (i, signal) in signals.iter().enumerate() {
+        if signal.left < signal.right {
+            ind += i + 1;
+        }
+    }
+
+    ind
 }
 
 pub fn part_2(input: &str) -> u32 {
