@@ -1,5 +1,6 @@
 use std::{
     collections::{BTreeMap, BTreeSet},
+    fmt::Error,
     str::FromStr,
 };
 
@@ -77,80 +78,72 @@ impl FromStr for Cave {
 }
 
 impl Cave {
-    fn fill_with_sand(&mut self, start: (usize, usize)) -> usize {
-        let mut sand = 0;
+    fn add_sand(&mut self, start: (usize, usize)) -> Option<(usize, usize)> {
         let mut sand_pos = start;
+
         while let Some(column) = self.rocks.get(&sand_pos.0) {
-            if let Some(next_rock) = column.range(sand_pos.1..).next() {
-                if next_rock - sand_pos.1 > 1 {
-                    sand_pos.1 = next_rock - 1;
+            // while there are rocks in this column,
+            if let Some(ground) = column.range(sand_pos.1..).next() {
+                // move the sand to the nearest ground
+                if ground - 1 > sand_pos.1 {
+                    sand_pos.1 = ground - 1;
                 }
 
-                let left_column = self.rocks.get(&(sand_pos.0 - 1));
-                let right_column = self.rocks.get(&(sand_pos.0 + 1));
-
-                // check left
-                if left_column.is_none()
-                    || left_column
-                        .unwrap()
-                        .range((sand_pos.1 + 1)..)
-                        .next()
-                        .is_none()
+                if self
+                    // If down-left is open, move there
+                    .rocks
+                    .get(&(sand_pos.0 - 1))?
+                    .range(sand_pos.1 + 1..)
+                    .next()?
+                    != &(sand_pos.1 + 1)
                 {
-                    // Left void
-                    return sand;
-                } else if left_column
-                    .unwrap()
-                    .range((sand_pos.1 + 1)..)
-                    .next()
-                    .unwrap()
-                    == &(sand_pos.1 + 1)
-                {
-                    // Check Right
-                    if right_column.is_none()
-                        || right_column
-                            .unwrap()
-                            .range((sand_pos.1 + 1)..)
-                            .next()
-                            .is_none()
-                    {
-                        // Right void
-                        return sand;
-                    } else if right_column
-                        .unwrap()
-                        .range((sand_pos.1 + 1)..)
-                        .next()
-                        .unwrap()
-                        == &(sand_pos.1 + 1)
-                    {
-                        // Set sand
-                        self.rocks.entry(sand_pos.0).and_modify(|rows| {
-                            rows.insert(sand_pos.1);
-                        });
-                        self.sand.insert(sand_pos);
-                        sand += 1;
-                        sand_pos = start;
-                    } else {
-                        // Can go right
-                        sand_pos.0 += 1;
-                    }
-                } else {
-                    // Can go left
                     sand_pos.0 -= 1;
+                    sand_pos.1 += 1;
+                } else if self
+                    // else, if down-right is open, move there
+                    .rocks
+                    .get(&(sand_pos.0 + 1))?
+                    .range(sand_pos.1 + 1..)
+                    .next()?
+                    != &(sand_pos.1 + 1)
+                {
+                    sand_pos.0 += 1;
+                    sand_pos.1 += 1;
+                } else {
+                    // otherwise, rest here
+                    return Some(sand_pos);
                 }
             } else {
-                // there are rocks above, but none below
-                break;
+                return None;
             }
         }
 
-        sand // Fall off map; empty column
+        None
+    }
+
+    fn fill_with_sand(&mut self, start: (usize, usize)) -> Result<usize, Error> {
+        let mut sand = 0;
+        while let Some(pos) = self.add_sand(start) {
+            sand += 1;
+
+            if !self.sand.insert(pos) {
+                panic!("Added sand to filled location (sand)! pos: {:?}", pos);
+            }
+
+            self.rocks.entry(pos.0).and_modify(|p| {
+                if !p.insert(pos.1) {
+                    panic!("Added sand to filled location (rock)! pos: {:?}", pos);
+                }
+            });
+        }
+
+        Ok(sand) // Fall off map; empty column
     }
 }
 
 pub fn part_1(input: &str) -> usize {
     let mut cave = input.parse::<Cave>().unwrap();
-    let sand = cave.fill_with_sand((500, 0));
+    let sand = cave.fill_with_sand((500, 0)).unwrap();
     dbg!(cave.sand);
     sand
 }
