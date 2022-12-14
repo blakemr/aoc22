@@ -1,6 +1,6 @@
 use std::{
     collections::{BTreeMap, BTreeSet},
-    fmt::Error,
+    fmt::{Display, Error},
     str::FromStr,
 };
 
@@ -77,6 +77,40 @@ impl FromStr for Cave {
     }
 }
 
+impl Display for Cave {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let first_column = self.rocks.keys().next().unwrap();
+        let width = self.rocks.keys().last().unwrap() - self.rocks.keys().next().unwrap();
+        let height = self
+            .rocks
+            .iter()
+            .map(|(_, column)| column.iter().max())
+            .max()
+            .unwrap()
+            .unwrap();
+
+        let mut output = String::new();
+        for row in 0..=*height {
+            for column in *first_column..=(first_column + width) {
+                if (column, row) == (500, 0) {
+                    output.push('+');
+                } else if self.sand.contains(&(column, row)) {
+                    output.push('o');
+                } else if self.rocks.contains_key(&column)
+                    && self.rocks.get(&column).unwrap().contains(&row)
+                {
+                    output.push('#');
+                } else {
+                    output.push('.');
+                }
+            }
+            output.push('\n');
+        }
+
+        write!(f, "{}", output)
+    }
+}
+
 impl Cave {
     fn add_sand(&mut self, start: (usize, usize)) -> Option<(usize, usize)> {
         let mut sand_pos = start;
@@ -87,9 +121,7 @@ impl Cave {
                 // move the sand to the nearest ground
                 if ground - 1 > sand_pos.1 {
                     sand_pos.1 = ground - 1;
-                }
-
-                if self
+                } else if self
                     // If down-left is open, move there
                     .rocks
                     .get(&(sand_pos.0 - 1))?
@@ -144,7 +176,7 @@ impl Cave {
 pub fn part_1(input: &str) -> usize {
     let mut cave = input.parse::<Cave>().unwrap();
     let sand = cave.fill_with_sand((500, 0)).unwrap();
-    dbg!(cave.sand);
+    println!("{}", cave);
     sand
 }
 
@@ -178,7 +210,7 @@ mod tests {
     fn run_part_1() {
         let input = fs::read_to_string(INPUT).unwrap();
 
-        println!("{:?}", part_1(&input))
+        println!("{}", part_1(&input))
     }
 
     #[test]
