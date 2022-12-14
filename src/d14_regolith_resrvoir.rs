@@ -4,7 +4,7 @@ use std::{
     str::FromStr,
 };
 
-use itertools::Itertools;
+use itertools::{sorted, Itertools};
 
 #[derive(Debug)]
 struct ParseCaveError;
@@ -38,8 +38,10 @@ impl FromStr for Cave {
         for rock_ends in endpoints.iter() {
             for eps in rock_ends.windows(2) {
                 if eps[0].0 == eps[1].0 {
-                    let start = eps[0].1;
-                    let end = eps[1].1;
+                    let mut sorted = [eps[0].1, eps[1].1];
+                    sorted.sort();
+                    let start = sorted[0];
+                    let end = sorted[1];
 
                     // Can append, but not really worth bothering for now.
                     for row in start..=end {
@@ -51,8 +53,10 @@ impl FromStr for Cave {
                             .or_insert_with(|| BTreeSet::from([row]));
                     }
                 } else if eps[0].1 == eps[1].1 {
-                    let start = eps[0].0;
-                    let end = eps[1].0;
+                    let mut sorted = [eps[0].0, eps[1].0];
+                    sorted.sort();
+                    let start = sorted[0];
+                    let end = sorted[1];
 
                     let mut dir = [start, end];
                     dir.sort();
