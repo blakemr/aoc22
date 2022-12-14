@@ -22,7 +22,7 @@ impl FromStr for Packet {
                 '[' => packet_stack.push(Packet::List(Vec::new())),
                 ']' => {
                     if !pay.is_empty() {
-                        let parent = packet_stack.pop().unwrap();
+                        let parent = packet_stack.pop().ok_or(ParseSignalError)?;
                         if let Packet::List(mut par) = parent {
                             par.push(Packet::Int(pay.parse().unwrap()));
                             packet_stack.push(Packet::List(par));
@@ -32,7 +32,7 @@ impl FromStr for Packet {
                         }
                     }
 
-                    let elem = packet_stack.pop().unwrap();
+                    let elem = packet_stack.pop().ok_or(ParseSignalError)?;
                     if let Some(parent) = packet_stack.pop() {
                         if let Packet::List(mut par) = parent {
                             par.push(elem);
@@ -46,7 +46,7 @@ impl FromStr for Packet {
                 }
                 ',' => {
                     if !pay.is_empty() {
-                        let parent = packet_stack.pop().unwrap();
+                        let parent = packet_stack.pop().ok_or(ParseSignalError)?;
                         if let Packet::List(mut par) = parent {
                             par.push(Packet::Int(pay.parse().unwrap()));
                             packet_stack.push(Packet::List(par));
