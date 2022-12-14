@@ -116,6 +116,27 @@ impl Display for Cave {
 }
 
 impl Cave {
+    fn add_floor(&mut self, past_bottom: usize, left: usize, right: usize) {
+        let height = self
+            .rocks
+            .iter()
+            .map(|(_, column)| column.iter().max())
+            .max()
+            .unwrap()
+            .unwrap()
+            + past_bottom;
+
+        // Can append, but not really worth bothering for now.
+        for column in left..=right {
+            self.rocks
+                .entry(column)
+                .and_modify(|r| {
+                    r.insert(height);
+                })
+                .or_insert_with(|| BTreeSet::from([height]));
+        }
+    }
+
     fn add_sand(&mut self, start: (usize, usize)) -> Option<(usize, usize)> {
         let mut sand_pos = start;
 
@@ -175,6 +196,28 @@ impl Cave {
 
         Ok(sand) // Fall off map; empty column
     }
+    fn fill_to_top(&mut self, start: (usize, usize)) -> Result<usize, Error> {
+        let mut sand = 0;
+        while let Some(pos) = self.add_sand(start) {
+            sand += 1;
+
+            if pos == (500, 0) {
+                return Ok(sand);
+            }
+
+            if !self.sand.insert(pos) {
+                panic!("Added sand to filled location (sand)! pos: {:?}", pos);
+            }
+
+            self.rocks.entry(pos.0).and_modify(|p| {
+                if !p.insert(pos.1) {
+                    panic!("Added sand to filled location (rock)! pos: {:?}", pos);
+                }
+            });
+        }
+
+        panic!("Fell off map!") // Fall off map; empty column
+    }
 }
 
 pub fn part_1(input: &str) -> usize {
@@ -184,8 +227,12 @@ pub fn part_1(input: &str) -> usize {
     sand
 }
 
-pub fn part_2(input: &str) -> u32 {
-    todo!()
+pub fn part_2(input: &str) -> usize {
+    let mut cave = input.parse::<Cave>().unwrap();
+    cave.add_floor(2, 1, 1_000);
+    let sand = cave.fill_to_top((500, 0)).unwrap();
+    // println!("{}", cave);
+    sand
 }
 
 #[cfg(test)]
@@ -221,7 +268,7 @@ mod tests {
     fn test_part_2() {
         let input = fs::read_to_string(TEST_INPUT).unwrap();
 
-        assert_eq!(part_2(&input), 0)
+        assert_eq!(part_2(&input), 93)
     }
 
     #[test]
