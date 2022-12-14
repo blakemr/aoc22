@@ -4,12 +4,12 @@ use std::{str::FromStr, string::ParseError};
 struct ParseSignalError;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum SignalPacket {
-    List(Vec<SignalPacket>),
+enum Packet {
+    List(Vec<Packet>),
     Int(u32),
 }
 
-impl FromStr for SignalPacket {
+impl FromStr for Packet {
     type Err = ParseSignalError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -19,13 +19,13 @@ impl FromStr for SignalPacket {
 
         for ch in ch_iter {
             match ch {
-                '[' => packet_stack.push(SignalPacket::List(Vec::new())),
+                '[' => packet_stack.push(Packet::List(Vec::new())),
                 ']' => {
                     if !pay.is_empty() {
                         let parent = packet_stack.pop().unwrap();
-                        if let SignalPacket::List(mut par) = parent {
-                            par.push(SignalPacket::Int(pay.parse().unwrap()));
-                            packet_stack.push(SignalPacket::List(par));
+                        if let Packet::List(mut par) = parent {
+                            par.push(Packet::Int(pay.parse().unwrap()));
+                            packet_stack.push(Packet::List(par));
                             pay.clear();
                         } else {
                             panic!("Non-List Signal in stack after ','!");
@@ -34,9 +34,9 @@ impl FromStr for SignalPacket {
 
                     let elem = packet_stack.pop().unwrap();
                     if let Some(parent) = packet_stack.pop() {
-                        if let SignalPacket::List(mut par) = parent {
+                        if let Packet::List(mut par) = parent {
                             par.push(elem);
-                            packet_stack.push(SignalPacket::List(par));
+                            packet_stack.push(Packet::List(par));
                         } else {
                             panic!("Non-List Signal in stack after ']'!");
                         }
@@ -47,9 +47,9 @@ impl FromStr for SignalPacket {
                 ',' => {
                     if !pay.is_empty() {
                         let parent = packet_stack.pop().unwrap();
-                        if let SignalPacket::List(mut par) = parent {
-                            par.push(SignalPacket::Int(pay.parse().unwrap()));
-                            packet_stack.push(SignalPacket::List(par));
+                        if let Packet::List(mut par) = parent {
+                            par.push(Packet::Int(pay.parse().unwrap()));
+                            packet_stack.push(Packet::List(par));
                             pay.clear();
                         } else {
                             panic!("Non-List Signal in stack after ','!");
@@ -64,31 +64,31 @@ impl FromStr for SignalPacket {
     }
 }
 
-impl PartialOrd for SignalPacket {
+impl PartialOrd for Packet {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Packet {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match (self, other) {
-            (SignalPacket::Int(x), SignalPacket::Int(y)) => x.partial_cmp(y),
-            (SignalPacket::List(x), SignalPacket::List(y)) => x.partial_cmp(y),
-            (SignalPacket::List(x), SignalPacket::Int(y)) => SignalPacket::List(x.clone())
-                .partial_cmp(&SignalPacket::List(vec![SignalPacket::Int(*y)])),
-            (SignalPacket::Int(x), SignalPacket::List(y)) => {
-                SignalPacket::List(vec![SignalPacket::Int(*x)])
-                    .partial_cmp(&SignalPacket::List(y.clone()))
+            (Packet::Int(x), Packet::Int(y)) => x.cmp(y),
+            (Packet::List(x), Packet::List(y)) => x.cmp(y),
+            (Packet::List(x), Packet::Int(y)) => {
+                Packet::List(x.clone()).cmp(&Packet::List(vec![Packet::Int(*y)]))
+            }
+            (Packet::Int(x), Packet::List(y)) => {
+                Packet::List(vec![Packet::Int(*x)]).cmp(&Packet::List(y.clone()))
             }
         }
     }
 }
 
-impl Ord for SignalPacket {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.partial_cmp(other).unwrap()
-    }
-}
-
 #[derive(Debug)]
 pub struct Signal {
-    left: SignalPacket,
-    right: SignalPacket,
+    left: Packet,
+    right: Packet,
 }
 
 impl FromStr for Signal {
@@ -120,7 +120,7 @@ pub fn part_1(input: &str) -> usize {
 }
 
 pub fn part_2(input: &str) -> usize {
-    let mut signals: Vec<SignalPacket> = input
+    let mut signals: Vec<Packet> = input
         .split("\n\r\n")
         .flat_map(|pair| pair.lines())
         .map(|line| line.parse().unwrap())
@@ -133,12 +133,12 @@ pub fn part_2(input: &str) -> usize {
 
     (signals
         .iter()
-        .position(|x| x == &"[[2]]".parse::<SignalPacket>().unwrap())
+        .position(|x| x == &"[[2]]".parse::<Packet>().unwrap())
         .unwrap()
         + 1)
         * (signals
             .iter()
-            .position(|x| x == &"[[6]]".parse::<SignalPacket>().unwrap())
+            .position(|x| x == &"[[6]]".parse::<Packet>().unwrap())
             .unwrap()
             + 1)
 }
