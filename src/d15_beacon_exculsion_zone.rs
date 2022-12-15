@@ -2,8 +2,6 @@ use std::{collections::BTreeSet, ops::Range, str::FromStr};
 
 type Position = (i32, i32);
 
-impl Range<i32> {}
-
 #[derive(Debug)]
 pub struct ParseSensorError;
 
@@ -81,38 +79,32 @@ impl Sensor {
         let Some(covered) = self.coverage_y(row) else { return Some(vec![range]) };
 
         if covered.contains(&range.start) && covered.contains(&range.end) {
-            return None;
+            None
         } else if range.contains(&covered.start) && range.contains(&covered.end) {
-            return Some(vec![
-                [range.start..covered.start],
-                [covered.end + 1..range.end],
-            ]);
+            Some(vec![range.start..covered.start, covered.end + 1..range.end])
         } else if covered.contains(&range.start) {
-            return Some(vec![covered.end + 1..range.end]);
+            Some(vec![covered.end + 1..range.end])
         } else if covered.contains(&range.end) {
-            return Some(vec![range.start..covered.start]);
+            Some(vec![range.start..covered.start])
         } else {
-            return Some(vec![range]);
+            Some(vec![range])
         }
-    }
-
-    fn in_range(self, point: Position) -> bool {
-        self.position.0.abs_diff(point.0) + self.position.1.abs_diff(point.1) <= self.range as u32
     }
 }
 
-fn no_coverage_y(
-    sensors: Vec<Sensor>,
-    beacons: BTreeSet<Position>,
-    row_region: BTreeSet<i32>,
-    row: i32,
-) -> Option<Range<i32>> {
-    let mut undetected = row_region;
+fn no_coverage_y(sensors: &[Sensor], row_region: Range<i32>, row: i32) -> Option<(i32, i32)> {
+    let mut undetected = vec![row_region];
     sensors.iter().for_each(|sensor| {
-        undetected
-            .splice(sensor.coverage_y(row), Vec::new())
-            .collect()
-    })
+        let mut new_segments = Vec::new();
+        for segment in &undetected {
+            if let Some(segments) = sensor.clone().uncovered_y(row, segment.clone()) {
+                new_segments.extend(segments);
+            }
+        }
+        undetected = new_segments;
+    });
+
+    Some((undetected.first()?.start, row))
 }
 
 fn coverage_y(sensors: Vec<Sensor>, beacons: BTreeSet<Position>, row: i32) -> usize {
@@ -143,9 +135,15 @@ pub fn part_1(input: &str, row: i32) -> usize {
     coverage_y(sensors, beacons, row)
 }
 
-pub fn part_2(input: &str, min: i32, max: i32) -> u32 {
+pub fn part_2(input: &str, min: i32, max: i32) -> Option<i32> {
     let sensors = parse(input);
-    let beacons: BTreeSet<Position> = sensors.iter().flat_map(|s| s.beacons.clone()).collect();
+
+    for row in min..=max {
+        if let Some((x, y)) = no_coverage_y(&sensors, min..(max + 1), row) {
+            return Some(x * 4000000 + y);
+        }
+    }
+    None
 }
 
 pub fn parse(input: &str) -> Vec<Sensor> {
@@ -185,7 +183,7 @@ mod tests {
     fn test_part_2() {
         let input = fs::read_to_string(TEST_INPUT).unwrap();
 
-        assert_eq!(part_2(&input, 0, 10), 0)
+        assert_eq!(part_2(&input, 0, 10), Some(56000011))
     }
 
     #[test]
