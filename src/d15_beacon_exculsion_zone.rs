@@ -2,6 +2,65 @@ use std::{collections::BTreeSet, ops::Range, str::FromStr};
 
 type Position = (i64, i64);
 
+enum RangeDifference<T> {
+    Reduce(Range<T>),
+    Split((Range<T>, Range<T>)),
+    NoDiff,
+    None,
+}
+
+trait RangeExt<T> {
+    fn join(&self, other: &Self) -> Option<Self>
+    where
+        Self: std::marker::Sized;
+    fn difference(&self, other: &Self) -> RangeDifference<T>;
+}
+
+impl<T: Copy> RangeExt<T> for Range<T> {
+    fn join(&self, other: &Self) -> Option<Self> {
+        if self.start.max(other.start) >= self.end.max(other.end) {
+            Some(Range {
+                start: self.start.min(other.start),
+                end: self.start.max(other.start),
+            })
+        } else {
+            None
+        }
+    }
+
+    fn difference(&self, other: &Self) -> RangeDifference<T> {
+        if other.contains(&self.start) && other.contains(&self.end) {
+            RangeDifference::None
+        } else if self.contains(&other.start)
+            && self.contains(&other.end)
+            && self.start != other.start
+        {
+            RangeDifference::Split((
+                Range {
+                    start: self.start,
+                    end: other.start,
+                },
+                Range {
+                    start: other.end,
+                    end: self.end,
+                },
+            ))
+        } else if other.contains(&self.start) {
+            RangeDifference::Reduce(Range {
+                start: other.end,
+                end: self.end,
+            })
+        } else if other.contains(&(self.end - 1)) {
+            RangeDifference::Reduce(Range {
+                start: self.start,
+                end: other.start,
+            })
+        } else {
+            RangeDifference::NoDiff
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct ParseSensorError;
 
@@ -75,42 +134,31 @@ impl Sensor {
         }
     }
 
-    fn uncovered_y(self, row: i64, range: Range<i64>) -> Option<Vec<Range<i64>>> {
-        let Some(covered) = self.coverage_y(row) else { return Some(vec![range]) };
-
-        if covered.contains(&range.start) && covered.contains(&(range.end - 1)) {
-            None
-        } else if range.contains(&covered.start)
-            && range.contains(&(covered.end))
-            && range.start != covered.start
-        {
-            Some(vec![range.start..covered.start, covered.end..range.end])
-        } else if covered.contains(&range.start) {
-            Some(vec![covered.end..range.end])
-        } else if covered.contains(&(range.end - 1)) {
-            Some(vec![range.start..covered.start])
-        } else {
-            Some(vec![range])
-        }
+    fn uncovered_y(&self, row: i64, range: &Range<i64>) -> RangeDifference<Range<i64>> {
+        let Some(covered) = self.coverage_y(row) else { return RangeDifference::NoDiff };
+        range.difference(&covered)
     }
 }
 
-fn no_coverage_y(sensors: &[Sensor], row_region: Range<i64>, row: i64) -> Option<(i64, i64)> {
+fn no_coverage_y(sensors: &[Sensor], row_region: &Range<i64>, row: i64) -> Option<(i64, i64)> {
     let mut undetected = vec![row_region];
     sensors.iter().for_each(|sensor| {
         // dbg!(sensor.clone().coverage_y(row));
         let mut new_segments = Vec::new();
-        for segment in &undetected {
-            if let Some(segments) = sensor.clone().uncovered_y(row, segment.clone()) {
-                new_segments.extend(segments);
+        for segment in undetected {
+            match sensor.uncovered_y(row, segment) {
+                RangeDifference::Reduce(x) => new_segments.push(x),
+                RangeDifference::Split(x) => {
+                    new_segments.push(x.0);
+                    new_segments.push(x.1);
+                }
+                RangeDifference::NoDiff => new_segments.push(segment),
+                RangeDifference::None => {}
             }
         }
         undetected = new_segments;
-
-        // dbg!(&undetected);
     });
 
-    // dbg!(row, &undetected);
     Some((undetected.first()?.start, row))
 }
 
@@ -146,7 +194,7 @@ pub fn part_2(input: &str, min: i64, max: i64) -> Option<i64> {
     let sensors = parse(input);
 
     for row in min..=max {
-        if let Some((x, y)) = no_coverage_y(&sensors, min..max, row) {
+        if let Some((x, y)) = no_coverage_y(&sensors, &(min..max), row) {
             return Some(x * 4_000_000 + y);
         }
     }
