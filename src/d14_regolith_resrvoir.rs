@@ -1,12 +1,10 @@
 use std::{
     collections::{BTreeMap, BTreeSet},
     fmt::{Display, Error},
-    fs::File,
-    io::Write,
     str::FromStr,
 };
 
-use itertools::{sorted, Itertools};
+use itertools::Itertools;
 
 #[derive(Debug)]
 struct ParseCaveError;
@@ -232,11 +230,11 @@ pub fn part_1(input: &str) -> usize {
 pub fn part_2(input: &str) -> usize {
     let mut cave = input.parse::<Cave>().unwrap();
     cave.add_floor(2, 300, 800);
-    let sand = cave.fill_to_top((500, 0)).unwrap();
+    cave.fill_to_top((500, 0)).unwrap()
     // println!("{}", cave);
     // let mut file = File::create("view_data.txt").unwrap();
     // Write::write_all(&mut file, format!("{}", cave).as_bytes()).unwrap();
-    sand
+    // sand
 }
 
 #[cfg(test)]

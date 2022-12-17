@@ -4,6 +4,7 @@ pub mod d12_hill_climbing_algorithm;
 pub mod d13_distress_signal;
 pub mod d14_regolith_resrvoir;
 pub mod d15_beacon_exculsion_zone;
+pub mod d16_proboscidea_volcanium;
 pub mod d1_calorie_counting;
 pub mod d2_rock_paper_scissors;
 pub mod d3_rucksack_reorganization;

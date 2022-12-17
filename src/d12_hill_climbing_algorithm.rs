@@ -203,12 +203,12 @@ mod tests {
 
         let (n, s, e) = parse(&input);
         dbg!(s, e);
-        for i in 0..n.len() {
+        (0..n.len()).for_each(|i| {
             for j in 0..n[i].len() {
                 print!("{:?} ", n[i][j].connections.len())
             }
             println!()
-        }
+        });
     }
 
     #[test]
