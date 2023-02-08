@@ -1,30 +1,71 @@
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
+#[derive(Debug)]
 pub struct ParseNodeError;
 
-pub struct Valve<'a> {
-    flow: u64,
-    connections: Vec<&'a Self>,
+#[derive(Debug)]
+pub struct Valve {
+    flow: u32,
+    tunnels: Vec<String>,
 }
 
-impl<'a> FromStr for Valve<'a> {
+impl FromStr for Valve {
     type Err = ParseNodeError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        todo!()
+        let flow = s
+            .split(';')
+            .next()
+            .unwrap()
+            .split('=')
+            .nth(1)
+            .unwrap()
+            .parse::<u32>()
+            .unwrap();
+
+        let tunnels = s
+            .split("valves")
+            .nth(1)
+            .unwrap_or(s.split("valve").nth(1).unwrap())
+            .split_whitespace()
+            .map(|tun| tun.trim_end_matches(',').to_string())
+            .collect();
+
+        Ok(Valve { flow, tunnels })
     }
 }
 
 pub fn part_1(input: &str) -> u32 {
-    todo!()
+    let start = "AA";
+    let mut time = 30;
+    let valve_time = 1;
+    let travel_time = 1;
+
+    let valves = parse(input);
+
+    let flow = 0;
+
+    while time > 0 {
+        todo!()
+    }
+
+    flow
 }
 
 pub fn part_2(input: &str) -> u32 {
     todo!()
 }
 
-pub fn parse(input: &str) -> () {
-    todo!()
+pub fn parse(input: &str) -> HashMap<String, Valve> {
+    input
+        .lines()
+        .map(|line| {
+            (
+                line.split_whitespace().nth(1).unwrap().to_string(),
+                line.parse::<Valve>().unwrap(),
+            )
+        })
+        .collect()
 }
 
 #[cfg(test)]
